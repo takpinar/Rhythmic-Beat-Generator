@@ -1,7 +1,7 @@
 function plot_ibias_learning_time_course(t,iext,stim_spike,diff,rule1,rule2)
 
 % % Plot voltage trace, stimulus and iext
-h = figure;
+h = figure('Name','I_Bias');
 set(h,'Position',[0 500 600 500],'Color',[1,1,1])
 clf
 
@@ -14,20 +14,26 @@ hold on
 % % 3 Hz centre 12.339, min 11.699, max 12.980
 % % 4 Hz centre 14.349, min 13.652, max 15.074
 % % 5 Hz centre 15.677, min 14.929, max 16.460
-centre = 9.0727;
-min = 8.6217;
-max = 9.5486;
+% centre = 9.0727;
+% min = 8.6217;
+% max = 9.5486;
+centre = mean(iext);
+stdev = std(iext);
+lb = min(iext);
+ub = max(iext);
+
 % fill([0 0 t(end) t(end)],[min max max min],[0.9,0.95,1])
-plot(linspace(0,t(end),100),max*ones(1,100),'--','Color',[0.5 0.5 0.5])
-plot(linspace(0,t(end),100),min*ones(1,100),'--','Color',[0.5 0.5 0.5])
+plot(linspace(0,t(end),100),(centre+stdev)*ones(1,100),'--','Color',[0.5 0.5 0.5])
+plot(linspace(0,t(end),100),(centre-stdev)*ones(1,100),'--','Color',[0.5 0.5 0.5])
 plot(linspace(0,t(end),100),centre*ones(1,100),'Color',[0.7 0.7 0.7], 'LineWidth', 1)
 
 box on
 plot(t,iext,'Color',[0.1,0.5,0.9], 'LineWidth',2)
-ylab = ylabel('$I_{\rm bias}$ (mA)','Interpreter', 'Latex','fontsize',20);
+ylab = ylabel('$I_{\rm bias}$ (mA)','Interpreter', 'Latex','fontsize',18);
 set(gca,'linewidth',1.5,'fontsize',18,'fontname','Times')
 set(gca,'XTickLabel', {});
-axis([0 10 min-0.2 max+0.2])
+axis([0 10 lb-0.2 ub+0.2])
+print
  
 subplot(3,1,2)
 hold on
@@ -40,11 +46,14 @@ plot(stim_spike(1+end-length(diff):end)/1000,diff,'.','Color',[1,0.4,0.2], 'Mark
 set(gca,'linewidth',1.5,'fontsize',18,'fontname','Times')
 ylabel('Timing Error (ms)','Interpreter', 'Latex','fontsize',16);
 % xlabel('Time (s)','Interpreter', 'Latex','FontSize', 24)
-axis([0 10 -45 45])
+axis([0 10 -60 45])
+print
 
 subplot(3,1,3)
 hold on
 box on
+ub = max(max(rule1),max(rule2));
+lb = min(min(rule1),min(rule2));
 plot(t,rule1,'Color',[0.5,0,0.7], 'LineWidth',2)
 plot(t,rule2,'Color',[0,0.8,0], 'LineWidth',2)
 plot(t,zeros(1,length(t)),'Color',[0.7 0.7 0.7], 'LineWidth',1)
@@ -54,7 +63,7 @@ ylabel('Updates','Interpreter', 'Latex','fontsize',16);
 % set(ylab,'Rotation',0,'Position',get(ylab,'Position')-[300,0.0,0.0])
 set(gca,'linewidth',1.5,'fontsize',18,'fontname','Times')
 xlabel('Time (s)','Interpreter', 'Latex','FontSize', 20)
-axis([0 10 -0.6 0.6])
+axis([0 10 lb-0.2 ub+0.2])
 h = legend('$LR_T$','$LR_\phi$','Location','northeast');
 set(h,'Interpreter', 'Latex','fontsize',18,'fontname','Helvetica')
-
+print
