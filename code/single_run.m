@@ -37,16 +37,16 @@ Eca        = 50;
 EL         = -70;
 Eh         = -30;
 ENa        = 50;
-v1         = -40;
-k1         = 6.5;
-v2         = -60;
-k2         = 6;
-v3         = -70;
-k3         = 12;
-v4         = -75;
-k4         = 8;
-v5         = -67;
-k5         = 1;
+vm         = -40;
+km         = 6.5;
+vh         = -60;
+kh         = 6;
+vr         = -70;
+kr         = 12;
+vrT         = -75;
+krT         = 8;
+va         = -67;
+ka         = 1;
 tleft      = 30;
 tright     = 5;
 thmax      = 850;
@@ -126,12 +126,17 @@ S = stim(freq,t);
 
 for i = 2:N
 
+    % Display time (see progress)
+    if mod(i,5000)==0
+        t(i)
+    end
+    
     % Evolve equations for BG neuron
-    BG(:,i) = BG(:,i-1) + dt*BG_equations(t(i-1),BG(:,i-1),0,iext(i-1)+iint,v1,v2,v3,v4,v5,k1,k2,k3,k4,k5,gcat,gL,gh,gna,Eca,EL,Eh,ENa,phir,phih,thmax,tleft,tright);
+    BG(:,i) = BG(:,i-1) + dt*BG_equations(t(i-1),BG(:,i-1),0,iext(i-1)+iint,vm,vh,vr,vrT,va,km,kh,kr,krT,ka,gcat,gL,gh,gna,Eca,EL,Eh,ENa,phir,phih,thmax,tleft,tright);
 
     % Evolve equations for stimulus neuron
     if i < stim_dur*10000 % duration of stimulus
-        stim_sys(:,i) = stim_sys(:,i-1) + dt*stim_equations(t(i-1),stim_sys(:,i-1),S(i-1),iext1,gcat1,gL,gstim,Eca,EL,phih,v1,k1,v2,k2,tileft,tiright)';
+        stim_sys(:,i) = stim_sys(:,i-1) + dt*stim_equations(t(i-1),stim_sys(:,i-1),S(i-1),iext1,gcat1,gL,gstim,Eca,EL,phih,vm,km,vh,kh,tileft,tiright)';
     else
         stim_sys(:,i) = stim_sys(:,i-1);
     end
@@ -188,9 +193,6 @@ for i = 2:N
         % Apply phase rule
         rule2(i:end) = delta2*(sign(BGcount(i)-stim_C(i)/2-0.001)*(BGcount(i)*abs(stim_C(i)-BGcount(i)))/stim_C(i)^2);
         iext(i:end) = iext(i-1) + rule2(i);
-
-        % Display spike time (see progress)
-        t(i)
 
         % Save spike time
         if t(i)>20
