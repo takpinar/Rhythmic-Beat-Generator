@@ -1,17 +1,17 @@
-function [y,z] = BG_equations(t,x,inpute,iBias,vm,vh,vr,vrT,va,km,kh,kr,krT,ka,gcat,gL,gh,gna,Eca,EL,Eh,ENa,phir,phih,thmax,tleft,tright)
-% Equations descibing the dynamics of the beat generator netowork
+function [y,z] = BG_equations(t,bg,icell,inpute,inputi,iBias,vm,vh,vr,vrT,va,km,kh,kr,krT,ka,gcat,gL,gh,gna,Eca,EL,Eh,ENa,phir,phih,thmax,tleft,tright)
+% Equations descibing the dynamics of the beat generator network
 
 % MAIN BG VARS (excitatory cell)
-Ve  = x(1);
-he  = x(2);
-re  = x(3);
-sie = x(4);
+Ve  = bg(1);
+he  = bg(2);
+re  = bg(3);
+sie = bg(4);
 
 % INHIBITORY VARS
-Vi  = NaN;
-hi  = Nan;
-ri  = Nan;
-sei = NaN;
+Vi  = icell(1);
+hi  = icell(2);
+ri  = icell(3);
+sei = icell(4);
 
 % synaptic time constants
 tau_ampa = 2;

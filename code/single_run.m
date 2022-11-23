@@ -35,6 +35,8 @@ gcat1 = 10;
 gL    = 1.6;
 gh    = 1;
 gna   = 0.1;
+gei   = 0.2;
+gie   = 0.2;
 
 % Reversal Potentials
 Eca   = 50;
@@ -59,6 +61,8 @@ tleft  = 30;
 tright = 5;
 thmax  = 850;
 
+
+inputi     = 3.5;
 phir       = 1;
 phih       = 1;
 iext1      = -14;
@@ -97,7 +101,8 @@ t = linspace(0,tmax,N);
 %stim_C  = init.stim_C0(r)*ones(1,N);
 
 % % Define initial yourself
-U0      = [-70,0.85,0.3,-75,0.9,1.3,1.3]';
+% [Ve, he, re, sie, Vi, hi, ri, sei, StimV, Stimh, gammaBGinit, gammaSinit]
+U0      = [-70,0.85,0.3,0,-66.6,0.85,0.3,0,-75,0.9,1.3,1.3]';
 iBias   = 1*ones(1,N);
 BGcount = 1*ones(1,N);  % Number of gamma cycles since last spike
 Scount  = 1*ones(1,N);
@@ -111,16 +116,18 @@ BG_spike   = [];
 stim_spike = [];
 
 % Initialise variables of model
-BG       = zeros(3,N);
+BG       = zeros(4,N);
+ICell    = zeros(4,N);
 stim_sys = zeros(2,N);
 gammaBG  = zeros(1,N);
 gammaS   = zeros(1,N);
 
 % Set up with initial data
-BG(:,1)       = U0(1:3,1);
-stim_sys(:,1) = U0(4:5,1);
-gammaBG(1)    = U0(6,1);
-gammaS(1)     = U0(7,1);
+BG(:,1)       = U0(1:4,1);
+ICell         = U0(5:8,1);
+stim_sys(:,1) = U0(9:10,1);
+gammaBG(1)    = U0(11,1);
+gammaS(1)     = U0(12,1);
 
 % Initialise vectors to store learning rule updates
 rule1 = zeros(1,N); % Period
@@ -141,10 +148,14 @@ for i = 2:N
     end
 
     % Evolve equations for BG neuron
-    BG(:,i) = BG(:,i-1) + dt*BG_equations(t(i-1),BG(:,i-1),0,iBias(i-1)+iint,...
-                                        vm,vh,vr,vrT,va,km,kh,kr,krT,ka,gcat,...
-                                        gL,gh,gna,Eca,EL,Eh,ENa,phir,phih,...
-                                        thmax,tleft,tright,Egaba,Eampa);
+    [bgdiffs,icelldiffs] = BG_equations(t(i-1),BG(:,i-1),ICell(:,i-1),0,iBias(i-1)+iint,...
+        inputi,vm,vh,vr,vrT,va,km,kh,kr,krT,ka,gcat,...
+        gL,gh,gna,Eca,EL,Eh,ENa,phir,phih,...
+        thmax,tleft,tright,Egaba,Eampa,gei,gie);
+
+
+    BG(:,i)    = BG(:,i-1) + dt*bgdiffs;
+    ICell(:,i) = ICell(:,i-1) + dt*icelldiffs;
 
     % Evolve equations for stimulus neuron
     if i < stim_dur*10000 % duration of stimulus
@@ -217,7 +228,7 @@ end
 
 
 % Combine variables into single vector
-U = [BG;stim_sys;gammaBG;gammaS];
+U = [BG;stim_sys;gammaBG;gammaS;ICell];
 
 % Convert to seconds
 t = t/1000;

@@ -7,8 +7,9 @@ clf
 
 hold on
 box on
-plot(t,U(4,:),'Color',[0.2,0.8,0.8],'Linewidth',0.7)
+plot(t,U(2,:),'Color',[0.2,0.8,0.8],'Linewidth',0.7)
 plot(t,U(1,:),'Color',[1,0.1,0.1], 'LineWidth',1.5)
+plot(t,U(5,:),'Color',[0.8,0.2,0.9],'LineWidth',1.3)
 plot(t,5*S(1:length(t))-40,'k','LineWidth',1.5)
 xlabel('Time (s)','Interpreter', 'Latex','FontSize', 20)
 set(gca,'linewidth',1.5,'fontsize',22,'fontname','Times')
