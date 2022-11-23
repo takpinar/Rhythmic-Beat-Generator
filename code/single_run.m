@@ -28,15 +28,21 @@ svflagErrs = 0; % Save error distribution
 
 freq       = 5;  % Stim Frequency
 stim_dur   = 10;   % Stimuli Duration (seconds)
+
+% Conductance Params
 gcat       = 11;
 gcat1      = 10;
 gL         = 1.6;
 gh         = 1;
 gna        = 0.1;
+
+% Reversal Potentials
 Eca        = 50;
 EL         = -70;
 Eh         = -30;
 ENa        = 50;
+
+% Gating Dynamics Params
 vm         = -40;
 km         = 6.5;
 vh         = -60;
@@ -50,6 +56,7 @@ ka         = 1;
 tleft      = 30;
 tright     = 5;
 thmax      = 850;
+
 phir       = 1;
 phih       = 1;
 iext1      = -14;
