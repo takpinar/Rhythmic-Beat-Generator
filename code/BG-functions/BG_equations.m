@@ -14,8 +14,8 @@ ri  = icell(3);
 sei = icell(4);
 
 % synaptic time constants
-tau_ampa = 2;
-tau_gaba = 2;
+tau_ampa = 20;
+tau_gaba = 300;
 
 % Evolve E cell vars
 dvedt  = iBias - gcat*Ainf(Ve,vm,km)*he*(Ve-Eca) - gL*(Ve-EL) - gh*re*(Ve-Eh) - gna*Ainf(Ve,va,ka).*(Ve-ENa) - gie*sie*(Ve-Egaba) + inpute;
@@ -31,5 +31,4 @@ dseidt = kampa(Ve)*(1-sei)-sei/tau_ampa;
 
 
 y = [dvedt;dhedt;dredt;dsiedt]; z = [dvidt;dhidt;dridt;dseidt];
-
 end
