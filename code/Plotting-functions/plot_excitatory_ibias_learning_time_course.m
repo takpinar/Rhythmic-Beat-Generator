@@ -1,8 +1,8 @@
-function plot_ibias_learning_time_course(t,iext,stim_spike,diff,rule1,rule2)
+function plot_excitatory_ibias_learning_time_course(t,iext,stim_spike,diff,rule1E,rule2E)
 
 % % Plot voltage trace, stimulus and iext
 h = figure('Name','I_Bias');
-set(h,'Position',[0 500 800 600],'Color',[1,1,1])
+set(h,'Position',[0 500 800 1000],'Color',[1,1,1])
 clf
 
 
@@ -29,11 +29,11 @@ plot(linspace(0,t(end),100),centre*ones(1,100),'Color',[0.7 0.7 0.7], 'LineWidth
 
 box on
 plot(t,iext,'Color',[0.1,0.5,0.9], 'LineWidth',2)
-ylab = ylabel('$I_{\rm bias}$ (mA)','Interpreter', 'Latex','fontsize',18);
+ylab = ylabel('$I_{\rm bias}1$ (mA)','Interpreter', 'Latex','fontsize',18);
 set(gca,'linewidth',1.5,'fontsize',18,'fontname','Times')
 set(gca,'XTickLabel', {});
 axis([0 10 lb-0.2 ub+1])
-print
+
  
 % subplot(3,1,2)
 % hold on
@@ -52,18 +52,19 @@ print
 subplot(2,1,2)
 hold on
 box on
-ub = max(max(rule1),max(rule2));
-lb = min(min(rule1),min(rule2));
-plot(t,rule1,'Color',[0.5,0,0.7], 'LineWidth',2)
-plot(t,rule2,'Color',[0,0.8,0], 'LineWidth',2)
+ub = max(max(rule1E),max(rule2E));
+lb = min(min(rule1E),min(rule2E));
+plot(t,rule1E,'Color',[0.5,0,0.7], 'LineWidth',2)
+plot(t,rule2E,'Color',[0,0.8,0], 'LineWidth',2)
 plot(t,zeros(1,length(t)),'Color',[0.7 0.7 0.7], 'LineWidth',1)
-plot(t,rule1,'Color',[0.5,0,0.7], 'LineWidth',2)
-plot(t,rule2,'Color',[0,0.8,0], 'LineWidth',2)
-ylabel('Updates','Interpreter', 'Latex','fontsize',16);
+plot(t,rule1E,'Color',[0.5,0,0.7], 'LineWidth',2)
+plot(t,rule2E,'Color',[0,0.8,0], 'LineWidth',2)
+ylabel('E-Cell Updates','Interpreter', 'Latex','fontsize',16);
 % set(ylab,'Rotation',0,'Position',get(ylab,'Position')-[300,0.0,0.0])
 set(gca,'linewidth',1.5,'fontsize',18,'fontname','Times')
-xlabel('Time (s)','Interpreter', 'Latex','FontSize', 20)
+% xlabel('Time (s)','Interpreter', 'Latex','FontSize', 20)
 axis([0 10 lb-0.2 ub+0.2])
-h = legend('$LR_T$','$LR_\phi$','Location','northeast');
-set(h,'Interpreter', 'Latex','fontsize',18)
-print
+legend('LR_T','LR_\phi','Location','northeast');
+
+% set(lgd,'Interprete
+end

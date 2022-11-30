@@ -26,7 +26,7 @@ svflagErrs = 0; % Save error distribution
 
 %% Parameters and numerics
 
-freq     = 5;  % Stim Frequency
+freq     = 2;  % Stim Frequency
 freq1    = 2;
 freq2    = 3;
 stim_dur = 10; % Stimuli Duration (seconds)
@@ -64,7 +64,7 @@ tright = 5;
 thmax  = 850;
 
 inpute     = 0;
-inputi     = -20;
+inputi     = -30;
 phir       = 1;
 phih       = 1;
 iext1      = -14;
@@ -76,8 +76,11 @@ taugammaS  = 40;
 vth        = -20; % Spike Threshold (mV)
 iint       = -33;
 
-delta1 = 0.2;
-delta2 = 2.5;
+delta1_E = 0.2; % E Cell Period Learning Rate
+delta2_E = 2.5; % E Cell Phase Learning Rate
+
+delta1_I = -0.2; % I Cell Period Learning Rate
+delta2_I = -2.5; % I Cell Phase Learning Rate
 
 % Runtime
 t0   = 0;
@@ -107,7 +110,8 @@ t = linspace(0,tmax,N);
 U0      = [-70,0.85,0.3,0,... % Ve, he, re, sie,
            -66.6,0.85,0.3,0,... % Vi, hi, ri, sei,
            -75,0.9,1.3,1.3]';
-iBias   = 9*ones(1,N);
+iBias_ecell   = 9*ones(1,N);
+iBias_icell   = 5*ones(1,N);
 BGcount = 1*ones(1,N);  % Number of gamma cycles since last spike
 Scount  = 1*ones(1,N);
 BG_C    = 10*ones(1,N); % BGcount at current spike
@@ -134,8 +138,11 @@ gammaBG(1)    = U0(11,1);
 gammaS(1)     = U0(12,1);
 
 % Initialise vectors to store learning rule updates
-rule1 = zeros(1,N); % Period
-rule2 = zeros(1,N); % Phase
+rule1_E = zeros(1,N); % E Cell Period Updates
+rule2_E = zeros(1,N); % E Cell Phase Updates
+rule1_I = zeros(1,N); % I Cell Period Updates
+rule2_I = zeros(1,N); % I Cell Phase Updates
+
 
 % Setup stimulus as vector of ones and zeros
 % 1 stimulus on, 0 stimulus off
@@ -156,7 +163,7 @@ for i = 2:N
     end
 
     % Evolve equations for BG neuron
-    [bgdiffs,icelldiffs] = BG_equations(t(i-1),BG(:,i-1),ICell(:,i-1),inpute,inputi,iBias(i-1)+iint,...
+    [bgdiffs,icelldiffs] = BG_equations(t(i-1),BG(:,i-1),ICell(:,i-1),inpute,iBias_icell(i-1)+inputi,iBias_ecell(i-1)+iint,...
         vm,vh,vr,vrT,va,km,kh,kr,krT,ka,gcat,...
         gL,gh,gna,Eca,EL,Eh,ENa,phir,phih,...
         thmax,tleft,tright,Egaba,Eampa,gei,gie);
@@ -200,9 +207,12 @@ for i = 2:N
         % Reset BG gamma counter to zero
         BGcount(i:end) = 0;
 
-        % Apply period rule
-        rule1(i:end) = delta1*(BG_C(i)-stim_C(i));
-        iBias(i:end) = iBias(i-1)+rule1(i);
+        % Apply period rules
+        rule1_E(i:end) = delta1_E*(BG_C(i)-stim_C(i));
+        iBias_ecell(i:end) = iBias_ecell(i-1)+rule1_E(i);
+
+        rule1_I(i:end) = delta1_I*(BG_C(i)-stim_C(i));
+        iBias_icell(i:end) = iBias_icell(i-1)+rule1_I(i);
 
         % Save spike time
         if t(i)>20
@@ -222,8 +232,8 @@ for i = 2:N
         Scount(i:end) = 0;
 
         % Apply phase rule
-        rule2(i:end) = delta2*(sign(BGcount(i)-stim_C(i)/2-0.001)*(BGcount(i)*abs(stim_C(i)-BGcount(i)))/stim_C(i)^2);
-        iBias(i:end) = iBias(i-1) + rule2(i);
+        rule2_E(i:end) = delta2_E*(sign(BGcount(i)-stim_C(i)/2-0.001)*(BGcount(i)*abs(stim_C(i)-BGcount(i)))/stim_C(i)^2);
+        iBias_ecell(i:end) = iBias_ecell(i-1) + rule2_E(i);
 
         % Save spike time
         if t(i)>20
@@ -263,7 +273,8 @@ plot_voltage_time_course(t,U,S)
 % Function plots bias current, timing error and learning rule updates
 % Current settings: displays first 10 seconds of data, ibias y-axis limits
 % set for 2 Hz
-plot_ibias_learning_time_course(t,iBias,stim_spike-1000,diff,rule1,rule2)
+plot_excitatory_ibias_learning_time_course(t,iBias_ecell,stim_spike-1000,diff,rule1_E,rule2_E)
+plot_inhibitory_ibias_learning_time_course(t,iBias_icell,stim_spike-1000,diff,rule1_I,rule2_I)
 
 % Histogram of spike timing differences
 figure('Name','Spike Timing Diffs')
@@ -272,20 +283,39 @@ clf
 hold on
 a       = diff>500/freq;
 diff(a) = diff(a)-1000/freq;
-histogram(diff,35,'Normalization','probability','FaceColor','r')
-%x = [-200:.2:200];
-% plot(x,normpdf(x,mean(diff),std(diff)))
+mn = mean(diff);
+stdev = std(diff);
+H=histogram(diff,50,'Normalization','probability','FaceColor','r');
+mxy = max(H.Values) + 0.01;
+fill([mn-stdev mn+stdev mn+stdev mn-stdev],[0 0 mxy mxy],'red','LineStyle','none','FaceAlpha',0.2);
+plot([mn mn],[0 mxy],'Color',[0.5 0.5 0.5])
+axis([mn-4*stdev mn+4*stdev 0 mxy])
 title('Spike Timing Difference Distribution')
+mnstr = sprintf('Mean = %.1f',mn);
+stdstr = sprintf('STD = %.1f',stdev);
+annotation('textbox',[.8 .8 .18 .1], 'String',append(mnstr,newline,stdstr))
 % 
 % 
 % 
 % Histogram of BG periods
 figure('Name','BG spike periods')
 hold on
-histogram(BG_spike(2:end)-BG_spike(1:end-1),30,'Normalization','probability','FaceColor','r')
+prds = BG_spike(2:end)-BG_spike(1:end-1);
+mn = mean(prds);
+stdev = std(prds);
+H=histogram(prds,50,'Normalization','probability','FaceColor','r');
+mxy = max(H.Values) + 0.01;
+f=fill([mn-stdev mn+stdev mn+stdev mn-stdev],[0 0 mxy mxy],'red','LineStyle','none','FaceAlpha',0.2);
+axis([mn-4*stdev mn+4*stdev 0 mxy])
+plot([mn mn],[0 mxy],'Color',[0.5 0.5 0.5])
+title('Excitatory Cell Period Distribution')
+mnstr = sprintf('Mean = %.1f',mn);
+stdstr = sprintf('STD = %.1f',stdev);
+annotation('textbox',[.78 .8 .2 .1], 'String',append(mnstr,newline,stdstr))
+
+
 print
-mean(BG_spike(2:end)-BG_spike(1:end-1))
-std(BG_spike(2:end)-BG_spike(1:end-1))
+
 
 %% Save data
 
@@ -293,15 +323,15 @@ std(BG_spike(2:end)-BG_spike(1:end-1))
 if svflagICs ==1
     x        = linspace(1000/(freq*dt), length(t),length(t)/1000*dt*(freq));
     U0       = U(:,ceil(x));
-    iext0    = iBias(:,ceil(x));
+    iext0    = iBias_ecell(:,ceil(x));
     BGcount0 = BGcount(:,ceil(x));
     Scount0  = Scount(:,ceil(x));
     BG_C0    = BG_C(:,ceil(x));
     stim_C0  = stim_C(:,ceil(x));
-    save(['Initial-conditions/',num2str(freq),'Hz_synced_inits_deltaT_',num2str(delta1),'_delta_phi_',num2str(delta2),'.mat'],'U0','iext0','BGcount0','Scount0','BG_C0','stim_C0');
+    save(['Initial-conditions/',num2str(freq),'Hz_synced_inits_deltaT_',num2str(delta1_E),'_delta_phi_',num2str(delta2_E),'.mat'],'U0','iext0','BGcount0','Scount0','BG_C0','stim_C0');
 end
 
 % Saves spike time differences (BG vs stim) if Err save flag equal to 1
 if svflagErrs == 1
-    save(['Error-distributions/',num2str(freq),'Hz_error_dist_deltaT_',num2str(delta1),'_delta_phi_',num2str(delta2),'.mat'],'BG_spike','stim_spike','diff')
+    save(['Error-distributions/',num2str(freq),'Hz_error_dist_deltaT_',num2str(delta1_E),'_delta_phi_',num2str(delta2_E),'.mat'],'BG_spike','stim_spike','diff')
 end
