@@ -27,6 +27,8 @@ svflagErrs = 0; % Save error distribution
 %% Parameters and numerics
 
 freq     = 5;  % Stim Frequency
+freq1    = 2;
+freq2    = 3;
 stim_dur = 10; % Stimuli Duration (seconds)
 
 % Conductance Params
@@ -35,8 +37,8 @@ gcat1 = 10;
 gL    = 1.6;
 gh    = 1;
 gna   = 0.1;
-gei   = 0.2;
-gie   = 0.2;
+gei   = 0.1;
+gie   = 0.4;
 
 % Reversal Potentials
 Eca   = 50;
@@ -61,8 +63,8 @@ tleft  = 30;
 tright = 5;
 thmax  = 850;
 
-
-inputi     = 3.5;
+inpute     = 10;
+inputi     = -30;
 phir       = 1;
 phih       = 1;
 iext1      = -14;
@@ -101,8 +103,10 @@ t = linspace(0,tmax,N);
 %stim_C  = init.stim_C0(r)*ones(1,N);
 
 % % Define initial yourself
-% [Ve, he, re, sie, Vi, hi, ri, sei, StimV, Stimh, gammaBGinit, gammaSinit]
-U0      = [-70,0.85,0.3,0,-66.6,0.85,0.3,0,-75,0.9,1.3,1.3]';
+% [Ve, he, re, sie,   Vi, hi, ri, sei,   StimV, Stimh, gammaBGinit, gammaSinit]
+U0      = [-70,0.85,0.3,0,... % Ve, he, re, sie,
+           -66.6,0.85,0.3,0,... % Vi, hi, ri, sei,
+           -75,0.9,1.3,1.3]';
 iBias   = 1*ones(1,N);
 BGcount = 1*ones(1,N);  % Number of gamma cycles since last spike
 Scount  = 1*ones(1,N);
@@ -136,7 +140,10 @@ rule2 = zeros(1,N); % Phase
 % Setup stimulus as vector of ones and zeros
 % 1 stimulus on, 0 stimulus off
 % On every 1000/freq ms for 25 ms
-S = stim(freq,t);
+% S = stim(freq,t);
+s1 = stim(freq1,t);
+s2 = stim(freq2,t);
+S = or(s1,s2);
 
 %% Simulate system
 
@@ -148,8 +155,8 @@ for i = 2:N
     end
 
     % Evolve equations for BG neuron
-    [bgdiffs,icelldiffs] = BG_equations(t(i-1),BG(:,i-1),ICell(:,i-1),0,iBias(i-1)+iint,...
-        inputi,vm,vh,vr,vrT,va,km,kh,kr,krT,ka,gcat,...
+    [bgdiffs,icelldiffs] = BG_equations(t(i-1),BG(:,i-1),ICell(:,i-1),inpute,inputi,iBias(i-1)+iint,...
+        vm,vh,vr,vrT,va,km,kh,kr,krT,ka,gcat,...
         gL,gh,gna,Eca,EL,Eh,ENa,phir,phih,...
         thmax,tleft,tright,Egaba,Eampa,gei,gie);
 
@@ -158,11 +165,11 @@ for i = 2:N
     ICell(:,i) = ICell(:,i-1) + dt*icelldiffs;
 
     % Evolve equations for stimulus neuron
-    if i < stim_dur*10000 % duration of stimulus
-        stim_sys(:,i) = stim_sys(:,i-1) + dt*stim_equations(t(i-1),stim_sys(:,i-1),S(i-1),iext1,gcat1,gL,gstim,Eca,EL,phih,vm,km,vh,kh,tileft,tiright)';
-    else
-        stim_sys(:,i) = stim_sys(:,i-1);
-    end
+%     if i < stim_dur*10000 % duration of stimulus
+%         stim_sys(:,i) = stim_sys(:,i-1) + dt*stim_equations(t(i-1),stim_sys(:,i-1),S(i-1),iext1,gcat1,gL,gstim,Eca,EL,phih,vm,km,vh,kh,tileft,tiright)';
+%     else
+%         stim_sys(:,i) = stim_sys(:,i-1);
+%     end
 
     % Evolve gamma integrators
     gammaBG(i) = gammaBG(i-1)+dt*(-gammaBG(i-1)/taugammaBG);
@@ -182,47 +189,47 @@ for i = 2:N
         gammaS(i)     = 2;
     end
 
-    % Recognise when BG neuron spikes
-    if BG(1,i)>vth && BG(1,i-1)<vth
-
-        % Update BG_C with current BG gamma counter value - number of gamma
-        % cycles between this spike and the previous spike
-        BG_C(i:end) = BGcount(i);
-
-        % Reset BG gamma counter to zero
-        BGcount(i:end) = 0;
-
-        % Apply period rule
-        rule1(i:end) = delta1*(BG_C(i)-stim_C(i));
-        iBias(i:end) = iBias(i-1)+rule1(i);
-
-        % Save spike time
-        if t(i)>20
-            BG_spike = [BG_spike,t(i)];
-        end
-
-    end
-
-    % Recognise when stimulus neuron spikes
-    if stim_sys(1,i)>vth && stim_sys(1,i-1)<vth
-
-        % Update stim_C with current stimulus gamma counter value - number
-        % of gamma cycles between this spike and the previous spike
-        stim_C(i:end) = Scount(i);
-
-        % Reset stimulus gamma counter to zero
-        Scount(i:end) = 0;
-
-        % Apply phase rule
-        rule2(i:end) = delta2*(sign(BGcount(i)-stim_C(i)/2-0.001)*(BGcount(i)*abs(stim_C(i)-BGcount(i)))/stim_C(i)^2);
-        iBias(i:end) = iBias(i-1) + rule2(i);
-
-        % Save spike time
-        if t(i)>20
-            stim_spike = [stim_spike,t(i)];
-        end
-
-    end
+%     % Recognise when BG neuron spikes
+%     if BG(1,i)>vth && BG(1,i-1)<vth
+% 
+%         % Update BG_C with current BG gamma counter value - number of gamma
+%         % cycles between this spike and the previous spike
+%         BG_C(i:end) = BGcount(i);
+% 
+%         % Reset BG gamma counter to zero
+%         BGcount(i:end) = 0;
+% 
+%         % Apply period rule
+%         rule1(i:end) = delta1*(BG_C(i)-stim_C(i));
+%         iBias(i:end) = iBias(i-1)+rule1(i);
+% 
+%         % Save spike time
+%         if t(i)>20
+%             BG_spike = [BG_spike,t(i)];
+%         end
+% 
+%     end
+% 
+%     % Recognise when stimulus neuron spikes
+%     if S(1,i)~=0 && S(1,i-1)==0
+% 
+%         % Update stim_C with current stimulus gamma counter value - number
+%         % of gamma cycles between this spike and the previous spike
+%         stim_C(i:end) = Scount(i);
+% 
+%         % Reset stimulus gamma counter to zero
+%         Scount(i:end) = 0;
+% 
+%         % Apply phase rule
+%         rule2(i:end) = delta2*(sign(BGcount(i)-stim_C(i)/2-0.001)*(BGcount(i)*abs(stim_C(i)-BGcount(i)))/stim_C(i)^2);
+%         iBias(i:end) = iBias(i-1) + rule2(i);
+% 
+%         % Save spike time
+%         if t(i)>20
+%             stim_spike = [stim_spike,t(i)];
+%         end
+% 
+%     end
 
 end
 
@@ -255,29 +262,29 @@ plot_voltage_time_course(t,U,S)
 % Function plots bias current, timing error and learning rule updates
 % Current settings: displays first 10 seconds of data, ibias y-axis limits
 % set for 2 Hz
-plot_ibias_learning_time_course(t,iBias,stim_spike-1000,diff,rule1,rule2)
+% plot_ibias_learning_time_course(t,iBias,stim_spike-1000,diff,rule1,rule2)
 
-% Histogram of spike timing differences
-figure('Name','Spike Timing Diffs')
-clf
-hold on
-a       = diff>500/freq;
-diff(a) = diff(a)-1000/freq;
-histogram(diff,35,'Normalization','probability','FaceColor','r')
-%x = [-200:.2:200];
-% plot(x,normpdf(x,mean(diff),std(diff)))
-title('Spike Timing Difference Distribution')
-print
+% % Histogram of spike timing differences
+% figure('Name','Spike Timing Diffs')
+% clf
 
-
-
-% Histogram of BG periods
-figure('Name','BG spike periods')
-hold on
-histogram(BG_spike(2:end)-BG_spike(1:end-1),30,'Normalization','probability','FaceColor','r')
-print
-mean(BG_spike(2:end)-BG_spike(1:end-1))
-std(BG_spike(2:end)-BG_spike(1:end-1))
+% hold on
+% a       = diff>500/freq;
+% diff(a) = diff(a)-1000/freq;
+% histogram(diff,35,'Normalization','probability','FaceColor','r')
+% %x = [-200:.2:200];
+% % plot(x,normpdf(x,mean(diff),std(diff)))
+% title('Spike Timing Difference Distribution')
+% 
+% 
+% 
+% % Histogram of BG periods
+% figure('Name','BG spike periods')
+% hold on
+% histogram(BG_spike(2:end)-BG_spike(1:end-1),30,'Normalization','probability','FaceColor','r')
+% print
+% mean(BG_spike(2:end)-BG_spike(1:end-1))
+% std(BG_spike(2:end)-BG_spike(1:end-1))
 
 %% Save data
 

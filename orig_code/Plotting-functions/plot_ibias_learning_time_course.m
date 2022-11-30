@@ -28,6 +28,7 @@ ylab = ylabel('$I_{\rm bias}$ (mA)','Interpreter', 'Latex','fontsize',20);
 set(gca,'linewidth',1.5,'fontsize',18,'fontname','Times')
 set(gca,'XTickLabel', {});
 axis([0 10 min-0.2 max+0.2])
+print
  
 subplot(3,1,2)
 hold on
@@ -57,4 +58,5 @@ xlabel('Time (s)','Interpreter', 'Latex','FontSize', 20)
 axis([0 10 -0.6 0.6])
 h = legend('$LR_T$','$LR_\phi$','Location','northeast');
 set(h,'Interpreter', 'Latex','fontsize',18,'fontname','Helvetica')
+print
 

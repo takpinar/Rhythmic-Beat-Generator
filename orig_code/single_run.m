@@ -26,7 +26,9 @@ svflagErrs = 0;         % Save error distribution
 
 %% Parameters and numerics
 
-freq=2; 
+freq = 2;
+freq1=3; 
+freq2 =2;
 gcat=11;
 gcat1=10;
 gL=1.6;
@@ -119,7 +121,19 @@ rule2 = zeros(1,N);     % Phase
 % Setup stimulus as vector of ones and zeros
 % 1 stimulus on, 0 stimulus off
 % On every 1000/freq ms for 25 ms
-S = stim(freq,t);
+% S = stim(freq,t);
+
+% Add non-isochronous stimulus 
+s1 = stim(freq1,t);
+s2 = stim(freq2,t);
+S = or(s1,s2);
+% h=figure;
+% set(h,'Position',[0 500 600 200],'Color',[1,1,1])
+% clf
+% plot(t,5*S(1:length(t))-40,'k','LineWidth',1)
+% xlabel('Time (s)','Interpreter', 'Latex','FontSize', 20)
+% set(gca,'linewidth',1.5,'fontsize',22,'fontname','Times')
+% print
 
 %% Simulate system
 
@@ -129,7 +143,7 @@ for i = 2:N
     BG(:,i) = BG(:,i-1) + dt*BG_equations(t(i-1),BG(:,i-1),0,iext(i-1)+iint,v1,v2,v3,v4,v5,k1,k2,k3,k4,k5,gcat,gL,gh,gna,Eca,EL,Eh,ENa,phir,phih,thmax,tleft,tright);
     
     % Evolve equations for stimulus neuron
-    stim_sys(:,i) = stim_sys(:,i-1) + dt*stim_equations(t(i-1),stim_sys(:,i-1),S(i-1),iext1,gcat1,gL,gstim,Eca,EL,phih,v1,k1,v2,k2,tileft,tiright)';
+%     stim_sys(:,i) = stim_sys(:,i-1) + dt*stim_equations(t(i-1),stim_sys(:,i-1),S(i-1),iext1,gcat1,gL,gstim,Eca,EL,phih,v1,k1,v2,k2,tileft,tiright)';
     
     % Evolve gamma integrators
     gammaBG(i) = gammaBG(i-1)+dt*(-gammaBG(i-1)/taugammaBG);
@@ -171,7 +185,8 @@ for i = 2:N
     end
     
     % Recognise when stimulus neuron spikes
-    if stim_sys(1,i)>vth && stim_sys(1,i-1)<vth
+%     if stim_sys(1,i)>vth && stim_sys(1,i-1)<vth
+    if S(1,i)~=0 && S(1,i-1)==0
         
         % Update stim_C with current stimulus gamma counter value - number 
         % of gamma cycles between this spike and the previous spike
@@ -222,10 +237,11 @@ end
 % Function plots voltage trace
 plot_voltage_time_course(t,U,S)
 
+
 % Function plots bias current, timing error and learning rule updates
 % Current settings: displays first 10 seconds of data, ibias y-axis limits
 % set for 2 Hz 
-plot_ibias_learning_time_course(t,iext,stim_spike-1000,diff,rule1,rule2)
+% plot_ibias_learning_time_course(t,iext,stim_spike-1000,diff,rule1,rule2)
 
 % Histogram of spike timing differences
 figure
