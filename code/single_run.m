@@ -147,11 +147,11 @@ rule2_I = zeros(1,N); % I Cell Phase Updates
 % Setup stimulus as vector of ones and zeros
 % 1 stimulus on, 0 stimulus off
 % On every 1000/freq ms for 3 ms
-S = stim(freq,t);
-% s1 = stim(freq1,t);
-% s2 = stim(freq2,t);
-% S = or(s1,s2);
-% S(1,stim_dur*10000) = 0;
+% S = stim(freq,t);
+s1 = stim(freq1,t);
+s2 = stim(freq2,t);
+S = or(s1,s2);
+S(1,stim_dur*10000) = 0;
 
 %% Simulate system
 
@@ -268,50 +268,50 @@ end
 % plot_voltage_ibias_learning_time_course(t,U,S,iext,rule1,rule2)
 
 % Function plots voltage trace
-plot_voltage_time_course(t,U,S)
+% plot_voltage_time_course(t,U,S)
 
 % Function plots bias current, timing error and learning rule updates
 % Current settings: displays first 10 seconds of data, ibias y-axis limits
 % set for 2 Hz
 plot_excitatory_ibias_learning_time_course(t,iBias_ecell,stim_spike-1000,diff,rule1_E,rule2_E)
-plot_inhibitory_ibias_learning_time_course(t,iBias_icell,stim_spike-1000,diff,rule1_I,rule2_I)
+% plot_inhibitory_ibias_learning_time_course(t,iBias_icell,stim_spike-1000,diff,rule1_I,rule2_I)
 
 % Histogram of spike timing differences
-figure('Name','Spike Timing Diffs')
-clf
-
-hold on
-a       = diff>500/freq;
-diff(a) = diff(a)-1000/freq;
-mn = mean(diff);
-stdev = std(diff);
-H=histogram(diff,50,'Normalization','probability','FaceColor','r');
-mxy = max(H.Values) + 0.01;
-fill([mn-stdev mn+stdev mn+stdev mn-stdev],[0 0 mxy mxy],'red','LineStyle','none','FaceAlpha',0.2);
-plot([mn mn],[0 mxy],'Color',[0.5 0.5 0.5])
-axis([mn-4*stdev mn+4*stdev 0 mxy])
-title('Spike Timing Difference Distribution')
-mnstr = sprintf('Mean = %.1f',mn);
-stdstr = sprintf('STD = %.1f',stdev);
-annotation('textbox',[.8 .8 .18 .1], 'String',append(mnstr,newline,stdstr))
+% figure('Name','Spike Timing Diffs')
+% clf
+% 
+% hold on
+% a       = diff>500/freq;
+% diff(a) = diff(a)-1000/freq;
+% mn = mean(diff);
+% stdev = std(diff);
+% H=histogram(diff,50,'Normalization','probability','FaceColor','r');
+% mxy = max(H.Values) + 0.01;
+% fill([mn-stdev mn+stdev mn+stdev mn-stdev],[0 0 mxy mxy],'red','LineStyle','none','FaceAlpha',0.2);
+% plot([mn mn],[0 mxy],'Color',[0.5 0.5 0.5])
+% axis([mn-4*stdev mn+4*stdev 0 mxy])
+% title('Spike Timing Difference Distribution')
+% mnstr = sprintf('Mean = %.1f',mn);
+% stdstr = sprintf('STD = %.1f',stdev);
+% annotation('textbox',[.77 .8 .21 .1], 'String',append(mnstr,newline,stdstr))
 % 
 % 
 % 
 % Histogram of BG periods
-figure('Name','BG spike periods')
-hold on
-prds = BG_spike(2:end)-BG_spike(1:end-1);
-mn = mean(prds);
-stdev = std(prds);
-H=histogram(prds,50,'Normalization','probability','FaceColor','r');
-mxy = max(H.Values) + 0.01;
-f=fill([mn-stdev mn+stdev mn+stdev mn-stdev],[0 0 mxy mxy],'red','LineStyle','none','FaceAlpha',0.2);
-axis([mn-4*stdev mn+4*stdev 0 mxy])
-plot([mn mn],[0 mxy],'Color',[0.5 0.5 0.5])
-title('Excitatory Cell Period Distribution')
-mnstr = sprintf('Mean = %.1f',mn);
-stdstr = sprintf('STD = %.1f',stdev);
-annotation('textbox',[.78 .8 .2 .1], 'String',append(mnstr,newline,stdstr))
+% figure('Name','BG spike periods')
+% hold on
+% prds = BG_spike(2:end)-BG_spike(1:end-1);
+% mn = mean(prds);
+% stdev = std(prds);
+% H=histogram(prds,50,'Normalization','probability','FaceColor','r');
+% mxy = max(H.Values) + 0.01;
+% f=fill([mn-stdev mn+stdev mn+stdev mn-stdev],[0 0 mxy mxy],'red','LineStyle','none','FaceAlpha',0.2);
+% axis([mn-4*stdev mn+4*stdev 0 mxy])
+% plot([mn mn],[0 mxy],'Color',[0.5 0.5 0.5])
+% title('Excitatory Cell Period Distribution')
+% mnstr = sprintf('Mean = %.1f',mn);
+% stdstr = sprintf('STD = %.1f',stdev);
+% annotation('textbox',[.78 .8 .2 .1], 'String',append(mnstr,newline,stdstr))
 
 
 print
